@@ -1,0 +1,40 @@
+"""
+DynamoDB client shared across all MCP servers and lambdas.
+Connects to LocalStack — no real AWS.
+"""
+
+import boto3
+from backend.config import DYNAMODB_ENDPOINT_URL, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+
+_dynamodb_resource = None
+_dynamodb_client = None
+
+
+def get_dynamodb_resource():
+    global _dynamodb_resource
+    if _dynamodb_resource is None:
+        _dynamodb_resource = boto3.resource(
+            "dynamodb",
+            endpoint_url=DYNAMODB_ENDPOINT_URL,
+            region_name=AWS_REGION,
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        )
+    return _dynamodb_resource
+
+
+def get_dynamodb_client():
+    global _dynamodb_client
+    if _dynamodb_client is None:
+        _dynamodb_client = boto3.client(
+            "dynamodb",
+            endpoint_url=DYNAMODB_ENDPOINT_URL,
+            region_name=AWS_REGION,
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        )
+    return _dynamodb_client
+
+
+def get_table(table_name: str):
+    return get_dynamodb_resource().Table(table_name)
