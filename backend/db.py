@@ -49,3 +49,16 @@ def sanitize_for_dynamo(obj):
     if isinstance(obj, list):
         return [sanitize_for_dynamo(i) for i in obj]
     return obj
+
+
+def deserialize_from_dynamo(obj):
+    """Convert Decimal values back to float/int when reading from DynamoDB."""
+    if isinstance(obj, Decimal):
+        if obj == int(obj):
+            return int(obj)
+        return float(obj)
+    if isinstance(obj, dict):
+        return {k: deserialize_from_dynamo(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [deserialize_from_dynamo(i) for i in obj]
+    return obj

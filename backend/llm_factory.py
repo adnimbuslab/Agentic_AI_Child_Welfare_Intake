@@ -5,12 +5,28 @@ Changing LLM_MODEL_ID / LLM_PROVIDER env vars swaps the model for every agent.
 """
 
 import json
+import re
 import requests
 from backend.config import LLM_MODEL_ID, LLM_PROVIDER, ANTHROPIC_API_KEY, GOOGLE_API_KEY, OLLAMA_BASE_URL
 
 
 def get_model_id() -> str:
     return LLM_MODEL_ID
+
+
+def parse_llm_json(raw: str) -> dict:
+    """Parse JSON from LLM output, handling common quirks like comments, markdown fencing, and trailing commas."""
+    cleaned = raw.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[1]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        cleaned = cleaned.strip()
+    # Strip single-line // comments (not inside strings)
+    cleaned = re.sub(r'(?<=[,\}\]\d"null true false])\s*//[^\n]*', '', cleaned)
+    # Strip trailing commas before } or ]
+    cleaned = re.sub(r',\s*([}\]])', r'\1', cleaned)
+    return json.loads(cleaned)
 
 
 def invoke_llm(system_prompt: str, messages: list[dict], max_tokens: int = 4096) -> str:
@@ -38,7 +54,7 @@ def _invoke_ollama(system_prompt: str, messages: list[dict], max_tokens: int) ->
             "stream": False,
             "options": {"num_predict": max_tokens},
         },
-        timeout=120,
+        timeout=600,
     )
     response.raise_for_status()
     return response.json()["message"]["content"]

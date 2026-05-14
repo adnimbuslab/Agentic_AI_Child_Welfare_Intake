@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime, timezone
-from backend.db import get_table
+from backend.db import get_table, sanitize_for_dynamo
 from backend.config import CONFIDENCE_THRESHOLD_RISK
 
 
@@ -18,7 +18,7 @@ def calculate_risk_score(structured_fields: dict, data_quality_score: float = 0.
 
     if structured_fields:
         ct = structured_fields.get("concernType", {})
-        concern_type = ct.get("value", "") if isinstance(ct, dict) else str(ct)
+        concern_type = (ct.get("value") or "") if isinstance(ct, dict) else str(ct or "")
         age_field = structured_fields.get("childAge", {})
         age_val = age_field.get("value") if isinstance(age_field, dict) else age_field
         if age_val is not None:
@@ -98,5 +98,5 @@ def save_risk_assessment(case_id: str, risk_output: dict) -> dict:
         "createdAt": now,
     }
     item = {k: v for k, v in item.items() if v is not None}
-    table.put_item(Item=item)
+    table.put_item(Item=sanitize_for_dynamo(item))
     return {"saved": True, "caseId": case_id}

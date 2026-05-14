@@ -1,7 +1,7 @@
 """AR-004: Bias Monitoring Agent — checks risk reasoning for fairness."""
 
 import json
-from backend.llm_factory import invoke_llm
+from backend.llm_factory import invoke_llm, parse_llm_json
 from backend.config import CONFIDENCE_THRESHOLD_BIAS
 
 SYSTEM_PROMPT = """You are the Bias Monitoring Agent for a child welfare intake system.
@@ -49,13 +49,8 @@ def run(risk_assessment_output: dict, structured_fields: dict, bias_policy: dict
     )
 
     try:
-        cleaned = raw.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[1]
-            if cleaned.endswith("```"):
-                cleaned = cleaned[:-3]
-        result = json.loads(cleaned)
-    except (json.JSONDecodeError, IndexError):
+        result = parse_llm_json(raw)
+    except (json.JSONDecodeError, IndexError, ValueError):
         result = {
             "biasStatus": "Flagged",
             "biasConfidence": 0.0,

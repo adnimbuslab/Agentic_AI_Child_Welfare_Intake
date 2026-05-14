@@ -1,7 +1,7 @@
 """AR-001: Intake Understanding Agent — extracts structured fields from unstructured input."""
 
 import json
-from backend.llm_factory import invoke_llm
+from backend.llm_factory import invoke_llm, parse_llm_json
 from backend.config import CONFIDENCE_THRESHOLD_INTAKE
 
 SYSTEM_PROMPT = """You are the Intake Understanding Agent for a child welfare intake system.
@@ -79,13 +79,8 @@ def run(
     )
 
     try:
-        cleaned = raw.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[1]
-            if cleaned.endswith("```"):
-                cleaned = cleaned[:-3]
-        result = json.loads(cleaned)
-    except (json.JSONDecodeError, IndexError):
+        result = parse_llm_json(raw)
+    except (json.JSONDecodeError, IndexError, ValueError):
         result = _fallback_result()
         result["escalate"] = True
         result["escalationReason"] = "Failed to parse LLM response"
@@ -101,6 +96,15 @@ def run(
 
 
 def _post_process(result: dict, session_messages: list[dict]) -> dict:
+    raw_questions = result.get("followUpQuestions", [])
+    normalized = []
+    for q in raw_questions:
+        if isinstance(q, dict):
+            normalized.append(q.get("question", q.get("text", str(q))))
+        else:
+            normalized.append(str(q))
+    result["followUpQuestions"] = normalized
+
     fields = result.get("structuredFields", {})
 
     reporter_info = fields.get("reporterInfo", {})

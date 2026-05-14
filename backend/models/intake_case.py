@@ -48,6 +48,8 @@ class IntakeCase(BaseModel):
 
     @classmethod
     def from_dynamo(cls, item: dict) -> "IntakeCase":
+        from backend.db import deserialize_from_dynamo
+        item = deserialize_from_dynamo(item)
         if "riskConfidence" in item and isinstance(item["riskConfidence"], str):
             item["riskConfidence"] = float(item["riskConfidence"])
         if "dataQualityScore" in item and isinstance(item["dataQualityScore"], str):

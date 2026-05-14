@@ -1,7 +1,7 @@
 """AR-002: Risk Assessment Agent — evaluates child vulnerability and assigns risk level."""
 
 import json
-from backend.llm_factory import invoke_llm
+from backend.llm_factory import invoke_llm, parse_llm_json
 from backend.config import CONFIDENCE_THRESHOLD_RISK, DATA_QUALITY_THRESHOLD
 
 SYSTEM_PROMPT = """You are the Risk Assessment Agent for a child welfare intake system.
@@ -61,13 +61,8 @@ def run(structured_fields: dict, data_quality_score: float = 0.0, document_summa
     )
 
     try:
-        cleaned = raw.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[1]
-            if cleaned.endswith("```"):
-                cleaned = cleaned[:-3]
-        result = json.loads(cleaned)
-    except (json.JSONDecodeError, IndexError):
+        result = parse_llm_json(raw)
+    except (json.JSONDecodeError, IndexError, ValueError):
         result = {
             "riskLevel": "Medium",
             "confidenceScore": 0.4,
