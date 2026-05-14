@@ -29,10 +29,11 @@ class AgentOutput(BaseModel):
     createdAt: str = ""
 
     def to_dynamo(self) -> dict:
+        from backend.db import sanitize_for_dynamo
         item = self.model_dump(exclude_none=True)
         if self.confidenceScore is not None:
             item["confidenceScore"] = str(self.confidenceScore)
-        return item
+        return sanitize_for_dynamo(item)
 
     @classmethod
     def from_dynamo(cls, item: dict) -> "AgentOutput":

@@ -4,19 +4,9 @@ All 5 agents obtain their LLM client from this module.
 Changing LLM_MODEL_ID / LLM_PROVIDER env vars swaps the model for every agent.
 """
 
-from anthropic import Anthropic
-from backend.config import LLM_MODEL_ID, LLM_PROVIDER, ANTHROPIC_API_KEY
-
-_client_instance = None
-
-
-def get_llm_client() -> Anthropic:
-    global _client_instance
-    if _client_instance is None:
-        if LLM_PROVIDER != "anthropic":
-            raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}. Currently only 'anthropic' is supported.")
-        _client_instance = Anthropic(api_key=ANTHROPIC_API_KEY)
-    return _client_instance
+import json
+import requests
+from backend.config import LLM_MODEL_ID, LLM_PROVIDER, ANTHROPIC_API_KEY, GOOGLE_API_KEY, OLLAMA_BASE_URL
 
 
 def get_model_id() -> str:
@@ -24,9 +14,65 @@ def get_model_id() -> str:
 
 
 def invoke_llm(system_prompt: str, messages: list[dict], max_tokens: int = 4096) -> str:
-    client = get_llm_client()
+    if LLM_PROVIDER == "ollama":
+        return _invoke_ollama(system_prompt, messages, max_tokens)
+    elif LLM_PROVIDER == "google":
+        return _invoke_google(system_prompt, messages, max_tokens)
+    elif LLM_PROVIDER == "anthropic":
+        return _invoke_anthropic(system_prompt, messages, max_tokens)
+    else:
+        raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
+
+
+def _invoke_ollama(system_prompt: str, messages: list[dict], max_tokens: int) -> str:
+    ollama_messages = [{"role": "system", "content": system_prompt}]
+    for msg in messages:
+        role = msg["role"] if msg["role"] in ("user", "assistant") else "user"
+        ollama_messages.append({"role": role, "content": msg["content"]})
+
+    response = requests.post(
+        f"{OLLAMA_BASE_URL}/api/chat",
+        json={
+            "model": LLM_MODEL_ID,
+            "messages": ollama_messages,
+            "stream": False,
+            "options": {"num_predict": max_tokens},
+        },
+        timeout=120,
+    )
+    response.raise_for_status()
+    return response.json()["message"]["content"]
+
+
+def _invoke_google(system_prompt: str, messages: list[dict], max_tokens: int) -> str:
+    import google.generativeai as genai
+
+    genai.configure(api_key=GOOGLE_API_KEY)
+    model = genai.GenerativeModel(
+        model_name=LLM_MODEL_ID,
+        system_instruction=system_prompt,
+    )
+
+    history = []
+    for msg in messages[:-1]:
+        role = "user" if msg["role"] == "user" else "model"
+        history.append({"role": role, "parts": [msg["content"]]})
+
+    chat = model.start_chat(history=history)
+    last_msg = messages[-1]["content"] if messages else ""
+    response = chat.send_message(
+        last_msg,
+        generation_config=genai.types.GenerationConfig(max_output_tokens=max_tokens),
+    )
+    return response.text
+
+
+def _invoke_anthropic(system_prompt: str, messages: list[dict], max_tokens: int) -> str:
+    from anthropic import Anthropic
+
+    client = Anthropic(api_key=ANTHROPIC_API_KEY)
     response = client.messages.create(
-        model=get_model_id(),
+        model=LLM_MODEL_ID,
         max_tokens=max_tokens,
         system=system_prompt,
         messages=messages,

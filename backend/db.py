@@ -3,6 +3,7 @@ DynamoDB client shared across all MCP servers and lambdas.
 Connects to LocalStack — no real AWS.
 """
 
+from decimal import Decimal
 import boto3
 from backend.config import DYNAMODB_ENDPOINT_URL, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 
@@ -38,3 +39,13 @@ def get_dynamodb_client():
 
 def get_table(table_name: str):
     return get_dynamodb_resource().Table(table_name)
+
+
+def sanitize_for_dynamo(obj):
+    if isinstance(obj, float):
+        return Decimal(str(obj))
+    if isinstance(obj, dict):
+        return {k: sanitize_for_dynamo(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [sanitize_for_dynamo(i) for i in obj]
+    return obj

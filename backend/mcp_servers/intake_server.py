@@ -55,11 +55,12 @@ def update_intake_case(case_id: str, updates: dict) -> dict:
         expr_parts.append(f"{alias} = {placeholder}")
         expr_names[alias] = key
         expr_values[placeholder] = val
+    from backend.db import sanitize_for_dynamo
     table.update_item(
         Key={"caseId": case_id},
         UpdateExpression="SET " + ", ".join(expr_parts),
         ExpressionAttributeNames=expr_names,
-        ExpressionAttributeValues=expr_values,
+        ExpressionAttributeValues=sanitize_for_dynamo(expr_values),
     )
     return get_intake_case(case_id)
 

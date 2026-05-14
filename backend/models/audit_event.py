@@ -25,7 +25,8 @@ class AuditEvent(BaseModel):
     createdAt: str = ""
 
     def to_dynamo(self) -> dict:
-        return self.model_dump(exclude_none=True)
+        from backend.db import sanitize_for_dynamo
+        return sanitize_for_dynamo(self.model_dump(exclude_none=True))
 
     @classmethod
     def from_dynamo(cls, item: dict) -> "AuditEvent":
