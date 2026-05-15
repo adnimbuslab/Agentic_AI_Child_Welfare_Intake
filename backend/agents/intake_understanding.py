@@ -18,7 +18,9 @@ INSTRUCTIONS:
 7. If reporter says they don't want to give their name or wishes to remain anonymous, set reporterInfo value to null or empty string. Do NOT set it to their statement.
 
 Required fields: childName, childDob, childAge, guardianInfo, reporterInfo, reporterRelationship, contactDetails, address, concernType, incidentDescription
-Optional fields: urgencyIndicators, priorConcerns
+Optional fields: childSsn, urgencyIndicators, priorConcerns
+
+NOTE: If the reporter provides the child's SSN (Social Security Number), extract it into the childSsn field. Do NOT ask for it — only extract if voluntarily provided.
 
 ESCALATION RULES — you MUST set escalate=true if ANY of these are true:
 - The reporter provides CONFLICTING information (e.g., says child is 5 years old AND 16 years old)
@@ -41,6 +43,7 @@ Return your response as valid JSON matching this exact schema:
     "address": {"value": "string or null", "confidence": 0.0},
     "concernType": {"value": "string or null", "confidence": 0.0},
     "incidentDescription": {"value": "string or null", "confidence": 0.0},
+    "childSsn": {"value": "string or null", "confidence": 0.0},
     "urgencyIndicators": {"value": [], "confidence": 0.0},
     "priorConcerns": {"value": "string or null", "confidence": 0.0}
   },
@@ -150,7 +153,7 @@ def _detect_conflicts(text: str) -> bool:
 def _fallback_result() -> dict:
     fields = {}
     for name in [
-        "childName", "childDob", "childAge", "guardianInfo", "reporterInfo",
+        "childName", "childDob", "childAge", "childSsn", "guardianInfo", "reporterInfo",
         "reporterRelationship", "contactDetails", "address", "concernType",
         "incidentDescription", "priorConcerns",
     ]:

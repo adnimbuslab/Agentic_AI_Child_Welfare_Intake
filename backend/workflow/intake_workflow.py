@@ -3,6 +3,7 @@
 from langgraph.graph import StateGraph, END
 from backend.workflow.state import IntakeWorkflowState
 from backend.agents import intake_understanding, risk_assessment, data_quality, bias_monitoring, explanation
+from backend.agents import duplicate_detector
 from backend.mcp_servers import (
     intake_server,
     audit_server,
@@ -40,6 +41,52 @@ def intake_understanding_node(state: IntakeWorkflowState) -> dict:
     )
 
     return {"intake_output": output}
+
+
+# --- WF-002b: Duplicate Check Node ---
+
+def duplicate_check_node(state: IntakeWorkflowState) -> dict:
+    structured = state.get("intake_output", {}).get("structuredFields", {})
+    existing_cases = case_history_server.search_existing_cases()
+
+    matches = duplicate_detector.find_duplicates(
+        new_fields=structured,
+        existing_cases=existing_cases,
+        current_case_id=state["case_id"],
+    )
+
+    audit_server.save_agent_decision(
+        case_id=state["case_id"],
+        agent_name="duplicate-detector",
+        output_json={"matches": matches, "candidateCount": len(existing_cases)},
+        confidence_score=matches[0]["confidence"] if matches else 0.0,
+    )
+
+    if matches and matches[0].get("confirmationRequired"):
+        return {
+            "duplicate_matches": matches,
+            "duplicate_pending_confirmation": True,
+        }
+
+    if matches and matches[0].get("autoMatch"):
+        return {
+            "duplicate_matches": matches,
+            "duplicate_pending_confirmation": False,
+            "matched_case_id": matches[0]["caseId"],
+        }
+
+    return {
+        "duplicate_matches": matches,
+        "duplicate_pending_confirmation": False,
+    }
+
+
+def duplicate_router(state: IntakeWorkflowState) -> str:
+    if state.get("duplicate_pending_confirmation"):
+        return "duplicate_confirmation_needed"
+    if state.get("matched_case_id"):
+        return "duplicate_confirmation_needed"
+    return "follow_up_check"
 
 
 # --- WF-003: Follow-Up Question Router ---
@@ -325,12 +372,33 @@ def needs_followup_node(state: IntakeWorkflowState) -> dict:
     }
 
 
+# --- Duplicate Confirmation Needed Node (pauses workflow, returns to user) ---
+
+def duplicate_confirmation_node(state: IntakeWorkflowState) -> dict:
+    matches = state.get("duplicate_matches", [])
+    if matches:
+        match_info = matches[0]
+        intake_server.save_intake_message(
+            case_id=state["case_id"],
+            message_text=f"Potential duplicate detected: case {match_info['caseId']} "
+                         f"(confidence: {match_info['confidence']:.0%}). "
+                         f"Reason: {match_info.get('reasoning', 'N/A')}",
+            sender_type="agent",
+            message_type="duplicate-check",
+            agent_generated=True,
+        )
+    return {"duplicate_pending_confirmation": True}
+
+
 # --- Build the graph ---
 
 def build_workflow() -> StateGraph:
     graph = StateGraph(IntakeWorkflowState)
 
     graph.add_node("intake_understanding", intake_understanding_node)
+    graph.add_node("duplicate_check", duplicate_check_node)
+    graph.add_node("duplicate_confirmation_needed", duplicate_confirmation_node)
+    graph.add_node("follow_up_check", lambda state: {})
     graph.add_node("risk_assessment", risk_assessment_node)
     graph.add_node("data_quality", data_quality_node)
     graph.add_node("bias_monitoring", bias_monitoring_node)
@@ -341,7 +409,16 @@ def build_workflow() -> StateGraph:
 
     graph.set_entry_point("intake_understanding")
 
-    graph.add_conditional_edges("intake_understanding", follow_up_router, {
+    graph.add_edge("intake_understanding", "duplicate_check")
+
+    graph.add_conditional_edges("duplicate_check", duplicate_router, {
+        "duplicate_confirmation_needed": "duplicate_confirmation_needed",
+        "follow_up_check": "follow_up_check",
+    })
+
+    graph.add_edge("duplicate_confirmation_needed", END)
+
+    graph.add_conditional_edges("follow_up_check", follow_up_router, {
         "risk_assessment": "risk_assessment",
         "human_review_queue": "human_review_queue",
         "needs_followup": "needs_followup",

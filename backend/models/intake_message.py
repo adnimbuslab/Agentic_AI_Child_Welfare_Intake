@@ -13,6 +13,7 @@ class MessageType(str, Enum):
     NARRATIVE = "narrative"
     FOLLOW_UP_QUESTION = "follow-up-question"
     FOLLOW_UP_ANSWER = "follow-up-answer"
+    DUPLICATE_CHECK = "duplicate-check"
     SYSTEM = "system"
 
 

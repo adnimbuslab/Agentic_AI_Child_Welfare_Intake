@@ -18,6 +18,11 @@ class IntakeWorkflowState(TypedDict, total=False):
     bias_output: dict[str, Any]
     explanation_output: dict[str, Any]
 
+    # Duplicate detection
+    duplicate_matches: list[dict]
+    duplicate_pending_confirmation: bool
+    matched_case_id: str
+
     # Routing
     needs_followup: bool
     escalated: bool
