@@ -1,0 +1,64 @@
+MEMORIAL MEDICAL CENTER
+PEDIATRIC OUTPATIENT VISIT SUMMARY
+
+Patient: Emma Grace Martinez
+DOB: 06/14/2019 (Age: 6)
+MRN: MMC-2019-084732
+Visit Date: May 18, 2026
+Provider: Dr. Jennifer Okoro, MD (Pediatrics)
+
+CHIEF COMPLAINT:
+Mother brought child for routine well-child visit (originally scheduled for
+March 2026, rescheduled twice).
+
+HISTORY OF PRESENT ILLNESS:
+Emma is a 6-year-old female presenting for a delayed well-child check. Mother
+Maria Martinez reports the child has been "doing okay" but acknowledges missing
+the original March appointment. Mother appeared fatigued and somewhat withdrawn
+during the visit.
+
+VITAL SIGNS:
+- Weight: 38 lbs (down from 41 lbs at last visit in September 2025)
+- Height: 43 inches
+- BMI: 14.7 (5th percentile - underweight)
+- Temp: 98.4F
+- Heart Rate: 88 bpm
+- Blood Pressure: 92/58
+
+PHYSICAL EXAMINATION:
+- General: Thin-appearing child, alert, appropriate for age
+- HEENT: Mild dental caries noted on 2 molars; hair dry and unkempt
+- Skin: Dry skin on extremities, no bruising, no rashes, no suspicious marks
+- Musculoskeletal: Normal range of motion, no tenderness
+- Neuro: Age-appropriate development, though mother reports decreased
+  interest in playing with other children
+
+DEVELOPMENTAL SCREENING:
+- Speech/Language: Age-appropriate
+- Motor skills: Age-appropriate
+- Social/Emotional: Some regression noted - previously outgoing child now
+  described as "quiet" and "clingy" per mother
+
+ASSESSMENT:
+1. Weight loss (3 lbs over 8 months) - concerning, needs nutritional follow-up
+2. Dental caries - referral to pediatric dentistry
+3. Behavioral changes - possible environmental stressors
+4. Delayed well-child visit pattern
+
+PLAN:
+1. Nutritional counseling provided to mother
+2. Return visit in 4 weeks for weight check
+3. Dental referral placed
+4. Discussed importance of regular meals and sleep schedule
+5. Mother given resource list for community food assistance programs
+
+PROVIDER NOTES (CONFIDENTIAL):
+Mother appeared to have difficulty maintaining eye contact and seemed distracted
+throughout the visit. When asked about home situation, mother stated "everything
+is fine" but became tearful. Recommended she speak with social worker. Mother
+declined. Child's weight loss and behavioral changes warrant monitoring. Consider
+DCFS notification if pattern continues.
+
+Dr. Jennifer Okoro, MD
+Board Certified Pediatrics
+Memorial Medical Center, Springfield, IL
