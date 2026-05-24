@@ -1,4 +1,4 @@
-"""Create a 10-minute demo walkthrough video from the running local app.
+"""Create a 2-minute demo walkthrough video from the running local app.
 
 Prereqs:
   - LocalStack, backend, frontend, and Ollama are running
@@ -23,22 +23,21 @@ VIEWPORT = {"width": 1920, "height": 1080}
 
 
 SLIDES = [
-    ("01_intake_start.png", 35),
-    ("02_session_started.png", 35),
-    ("03_documents_uploaded.png", 40),
-    ("04_narrative_ready.png", 40),
-    ("05_dashboard_all_cases.png", 45),
-    ("06_dashboard_escalated.png", 35),
-    ("07_case_summary.png", 45),
-    ("08_case_fields.png", 35),
-    ("09_case_documents.png", 35),
-    ("10_case_messages.png", 35),
-    ("11_case_agents.png", 45),
-    ("12_case_audit.png", 35),
-    ("13_human_review_queue.png", 35),
-    ("14_human_review_modal.png", 35),
-    ("15_terminal_summary.png", 45),
-    ("16_conclusion.png", 70),
+    ("01_intake_start.png", 7),
+    ("02_session_started.png", 7),
+    ("03_documents_uploaded.png", 9),
+    ("04_narrative_ready.png", 8),
+    ("05_dashboard_all_cases.png", 10),
+    ("06_dashboard_escalated.png", 8),
+    ("07_case_summary.png", 11),
+    ("08_case_fields.png", 9),
+    ("09_case_documents.png", 8),
+    ("11_case_agents.png", 11),
+    ("12_case_audit.png", 8),
+    ("13_human_review_queue.png", 8),
+    ("14_human_review_modal.png", 8),
+    ("15_terminal_summary.png", 10),
+    ("16_conclusion.png", 8),
 ]
 
 
@@ -284,7 +283,7 @@ def build_video():
         "anullsrc=channel_layout=stereo:sample_rate=48000",
         "-shortest",
         "-t",
-        "600",
+        "120",
         "-r",
         "30",
         "-pix_fmt",
@@ -303,7 +302,7 @@ def build_video():
 def main():
     print(f"Capturing live app frames from {FRONTEND} and {API}")
     capture_frames()
-    print("Building 10-minute MP4")
+    print("Building 2-minute MP4")
     build_video()
     print(f"Created {VIDEO_PATH}")
 
